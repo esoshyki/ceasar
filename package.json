@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "cli-color": "^2.0.0",
     "commander": "^5.0.0"
   }
 }
