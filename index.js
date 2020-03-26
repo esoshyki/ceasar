@@ -6,14 +6,27 @@ const clc = require('cli-color')
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
-const checkChunkIsLetter = (char) => alphabet.includes(char.toUpperCase())
 
-const transform = (char, shiftKey) => {
 
+const transform = (chunk, shiftKey) => {
+
+  const str = chunk.toString('utf8')
+
+  const smallTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 97) % 26) + 97) 
+  const bigTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 65) % 26) + 65)
   const isUpperCase = str => str === str.toUpperCase();
-  return isUpperCase(char) ? 
-  String.fromCharCode(((char.charCodeAt(0) + shiftKey - 65) % 26) + 65) :
-  String.fromCharCode(((char.charCodeAt(0) + shiftKey - 97) % 26) + 97);
+  const checkChunkIsLetter = (char) => alphabet.includes(char.toUpperCase())
+
+  let result = '';
+
+  for (let char of str) {
+    console.log(char)
+    console.log(isUpperCase(char))
+    if (checkChunkIsLetter(char)) {
+        result += isUpperCase(char) ? bigTransform(char) : smallTransform(char)
+    }
+  }
+  return result
 }
 
 program
@@ -24,18 +37,17 @@ program
   .parse(process.argv);
 
  let result = '';
+
  
 const readStream = fs.createReadStream(program.input);
 readStream.on('readable', () => {
   let chunk;
   const shiftKey = program.shift ? parseInt(program.shift) : 0
 
-  while (null !== (chunk = readStream.read(1))) {
-    const char = chunk.toString('utf8');
-    if (checkChunkIsLetter(char)) {
-      const letter = transform(char, shiftKey)
-      result += letter
-    }
+  while (null !== (chunk = readStream.read())) {
+      console.log(chunk)
+      const transfomedChunk = transform(chunk, shiftKey)
+      result += transfomedChunk
   }
 })
 readStream.on('end', () => {
