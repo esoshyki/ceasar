@@ -1,4 +1,4 @@
-const { program } = require('commander');
+erqrconst { program } = require('commander');
 const util = require('util')
 const stream = require('stream')
 const pipeline = util.promisify(stream.pipeline);
@@ -19,9 +19,21 @@ const shiftKey = program.shiftKey ? parseInt(program.shiftKey) : 0
 const input = program.input;
 let output = program.output ? program.output : null;
 
+function askQuestion(query) {
+  const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+  });
+
+  return new Promise(resolve => rl.question(query, ans => {
+      rl.close();
+      resolve(ans);
+  }))
+}
+
 const transform = () => {
   const transformFunc = (chunk, encoding, callback) => {
-    const str = chunk.toString('utf8').trim();
+    const str = chunk.toString('utf8');
     const data = str.split('').reverse().join('')
     callback(null, data)
   }
@@ -34,27 +46,9 @@ const transform = () => {
 const readStdinStream = process.stdin;
 readStdinStream.setEncoding('utf8');
 readStdinStream
-  .on('data', (chunk) => {
-    if (chunk.split('').pop() == '\n') {
-      readStdinStream.pause()
-    }
-  })
-  .on('pause', function (err) {
-    if (output) console.log(clc.yellow(clc.green(`Done. Written to ${output}`)));
+  .on('close', function (err) {
+    console.log(clc.yellow(`Done. Written to ${output}`));
   });
-
-  function askQuestion(query) {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-  
-    return new Promise(resolve => rl.question(query, ans => {
-        rl.close();
-        resolve(ans);
-    }))
-  }
-
 
 
 async function run() {
@@ -62,10 +56,11 @@ async function run() {
     output = await askQuestion(clc.cyan('Enter ouput\n'))
   }
   const readStream =  input ? fs.createReadStream(input) : readStdinStream;
-  const writeStream = fs.createWriteStream(output)
+  const writeStream = fs.createWriteStream(output, {autoClose: true})
 
   writeStream.on('end', () => {
-    console.log('ended')
+    readStream.close();
+    console.log(`save to ${output}`)
   })
 
   if (!input) {
@@ -76,14 +71,11 @@ async function run() {
     readStream,
     transform(),
     writeStream,
-  )
+  );
+  console.log(clc.green('Pipeline succeeded.'));
+  process.exit(0)
 }
 
-run()
-  .then(_ => {
-    console.log(clc.green(`Done. Written to ${output}`))
-    process.exit(0)
-  })
-  .catch((err) => {
+run().catch((err) => {
   console.log(err.message)
 });
