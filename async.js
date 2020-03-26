@@ -45,17 +45,25 @@ const transform = () => {
 
 const readStdinStream = process.stdin;
 readStdinStream.setEncoding('utf8');
-process.stdin.on('end', () => {
-  console.log('end')
-});
+readStdinStream
+  .on('data', function (chunk) {
+    readStdinStream.destroy();
+  })
+  .on('close', function (err) {
+    console.log(clc.yellow(`Done. Written to ${output}`));
+  });
+
 
 async function run() {
   if (!output) {
-    output = await askQuestion(clc.cyan('Enter ouput'))
+    output = await askQuestion(clc.cyan('Enter ouput\n'))
   }
-  console.log(output)
   const readStream =  input ? fs.createReadStream(input) : readStdinStream;
-  const writeStream = fs.createWriteStream(output)
+  const writeStream = fs.createWriteStream(output, {autoClose: true})
+
+  if (!input) {
+    console.log(clc.green('enter input data'))
+  }
 
   await pipeline(
     readStream,
@@ -66,4 +74,6 @@ async function run() {
   process.exit(0)
 }
 
-run().catch(console.error);
+run().catch((err) => {
+
+});
