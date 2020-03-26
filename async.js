@@ -17,9 +17,19 @@ program
 
 const shiftKey = program.shiftKey ? parseInt(program.shiftKey) : 0
 const input = program.input;
-const output = program.output;
+let output = program.output ? program.output : null;
 
-console.log(output)
+function askQuestion(query) {
+  const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+  });
+
+  return new Promise(resolve => rl.question(query, ans => {
+      rl.close();
+      resolve(ans);
+  }))
+}
 
 const transform = () => {
   const transformFunc = (chunk, encoding, callback) => {
@@ -33,38 +43,27 @@ const transform = () => {
   })
 }
 
-let inputData = ''
-
 const readStdinStream = process.stdin;
 readStdinStream.setEncoding('utf8');
-readStdinStream.on('data', () => {
-  inputData += readStdinStream.read();
-})
-
-if (!output) {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  rl.question(clc.cyan('Output is missing, please, enter output'), (answer) => {
-    output += answer
-    rl.close();
-  });
-}
-
-
-const readStream =  input ? fs.createReadStream(input) : readStdinStream;
-const writeStream = fs.createWriteStream(output);
+process.stdin.on('end', () => {
+  console.log('end')
+});
 
 async function run() {
+  if (!output) {
+    output = await askQuestion(clc.cyan('Enter ouput'))
+  }
+  console.log(output)
+  const readStream =  input ? fs.createReadStream(input) : readStdinStream;
+  const writeStream = fs.createWriteStream(output)
+
   await pipeline(
     readStream,
     transform(),
     writeStream,
-    process.exit(0)
   );
-  console.log('Pipeline succeeded.');
+  console.log(clc.green('Pipeline succeeded.'));
+  process.exit(0)
 }
 
 run().catch(console.error);
