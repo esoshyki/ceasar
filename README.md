@@ -24,7 +24,7 @@ If not defined, assigned 0
 
 ##### * -a --actioncod *
 Coding setting, required parametre, throw error if not assigned
-* Title of parametre is actioncod instead of action, because there was a conflict between 'under the hood' option of commander tool*
+*Title of parametre is actioncod instead of action, because there was a conflict between 'under the hood' option of commander tool*
 Must be decode or encode, otherwise an error will be thrown
 ```shyki_ceasar -a encode```
 ```shyki_ceasar --action decode```
