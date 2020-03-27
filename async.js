@@ -6,8 +6,6 @@ const fs = require('fs');
 const clc = require('cli-color')
 const readline = require('readline');
 
-const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-
 program
   .option('-s, --shift <value>', 'shifting')
   .option('-i, --input <file>', 'input file')
@@ -15,14 +13,35 @@ program
   .option('-a, --action <action>', 'action')
   .parse(process.argv);
 
-const shiftKey = program.shiftKey ? parseInt(program.shiftKey) : 0
+const shiftKey = program.shift ? parseInt(program.shift) : 0
 const input = program.input;
 let output = program.output ? program.output : null;
 
 const transform = () => {
+
+  const encode = (chunk) => {
+
+    const str = chunk.toString('utf8')
+    const smallTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 97) % 26) + 97) 
+    const bigTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 65) % 26) + 65)
+  
+    let result = '';
+  
+    for (let char of str) {
+      if (char.search(/[a-z]/) >= 0) {
+        result += smallTransform(char)
+      } else if (char.search(/[A-Z]/) >= 0) {
+        result += bigTransform(char)
+      } else if (char.search(/.,!?"'%d+ / >= 0)) {
+        result += char
+      }
+    }
+    return result
+  }
+
   const transformFunc = (chunk, encoding, callback) => {
     const str = chunk.toString('utf8').trim();
-    const data = str.split('').reverse().join('')
+    const data = encode(str)
     callback(null, data)
   }
 
