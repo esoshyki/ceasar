@@ -16,6 +16,16 @@ program
 
 const shiftKey = program.shift ? parseInt(program.shift) : 0
 const input = program.input;
+
+if (input) {
+  fs.access(input, fs.F_OK, (err) => {
+    if (err) {
+      errors.FILE_NOT_FOUNDED()
+      process.exit(127)
+    }
+  })
+}
+
 let encoding;
 if (!program.actioncod) {
   errors.NO_ACTION()
@@ -49,9 +59,9 @@ const transform = () => {
     for (let char of str) {
 
       if (char.search(/[a-z]/) >= 0) {
-        result += decodeSmall(char)
+        result += encoding ? encdodeSmall(char) : decodeSmall(char)
       } else if (char.search(/[A-Z]/) >= 0) {
-        result += bigTransform(char)
+        result += encoding ? encodeBig(char) : decodeBig(char)
       } else if (char.search(/.,!?"'%d+ / >= 0)) {
         result += char
       }
