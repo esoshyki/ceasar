@@ -5,31 +5,51 @@ const pipeline = util.promisify(stream.pipeline);
 const fs = require('fs');
 const clc = require('cli-color')
 const readline = require('readline');
+const errors = require('./errors')
 
 program
   .option('-s, --shift <value>', 'shifting')
   .option('-i, --input <file>', 'input file')
   .option('-o, --output <file>', 'output file')
-  .option('-a, --action <action>', 'action')
+  .option('-a, --actioncod <actioncod>', 'action')
   .parse(process.argv);
 
 const shiftKey = program.shift ? parseInt(program.shift) : 0
 const input = program.input;
+let encoding;
+if (!program.actioncod) {
+  errors.NO_ACTION()
+  process.exit(127)
+}
+if (program.actioncod === 'encode') {
+  encoding = true
+} else if (program.actioncod === 'decode') {
+  encoding = false
+} else {
+  errors.WRONG_ACTION()
+  process.exit(127)
+}
+
 let output = program.output ? program.output : null;
 
 const transform = () => {
 
-  const encode = (chunk) => {
+  const coder = (chunk) => {
 
     const str = chunk.toString('utf8')
-    const smallTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 97) % 26) + 97) 
-    const bigTransform = (char) => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 65) % 26) + 65)
-  
+
+    const decodeSmall = (char) => String.fromCharCode(97 + (26 + (char.charCodeAt(0) - shiftKey - 97 ))%26)
+    const decodeBig = (char) => String.fromCharCode(65 +(26 + (char.charCodeAt(0) - shiftKey - 65)) % 26);
+
+    const encdodeSmall = char => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 97) % 26) + 97)
+    const encodeBig = char => String.fromCharCode(((char.charCodeAt(0) + shiftKey - 65) % 26) + 65)
+    
     let result = '';
   
     for (let char of str) {
+
       if (char.search(/[a-z]/) >= 0) {
-        result += smallTransform(char)
+        result += decodeSmall(char)
       } else if (char.search(/[A-Z]/) >= 0) {
         result += bigTransform(char)
       } else if (char.search(/.,!?"'%d+ / >= 0)) {
@@ -41,7 +61,7 @@ const transform = () => {
 
   const transformFunc = (chunk, encoding, callback) => {
     const str = chunk.toString('utf8').trim();
-    const data = encode(str)
+    const data = coder(str)
     callback(null, data)
   }
 
