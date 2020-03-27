@@ -26,6 +26,13 @@ if (input) {
   })
 }
 
+if (program.shift) {
+  if (typeof program.shift !== 'number') {
+    errors.INCORRECT_SHIFT_VALUE()
+    process.exit(127)
+  }
+}
+
 let encoding;
 if (!program.actioncod) {
   errors.NO_ACTION()
